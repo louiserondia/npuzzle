@@ -1,11 +1,10 @@
+use complex::Complex;
+use grid::Grid;
+
 mod complex;
 mod grid;
 
-
 fn main() {
-    let mut g = grid::Grid::create_solved_grid(15);
-    println!("{:?}", g);
-
-    let mut z = complex::Complex::new(1, 0);
-    println!("{:?}", z);
+    let g2 = Grid::create_random_grid(5, 1000);
+    println!("{:?}", g2);
 }

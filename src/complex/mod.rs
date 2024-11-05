@@ -1,8 +1,7 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct Complex<T>
-{
+pub struct Complex<T> {
     pub x: T,
     pub y: T,
 }
@@ -50,15 +49,14 @@ where
     T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Copy,
 {
     fn mul_assign(&mut self, rhs: Self) {
-        let new_x = self.x * rhs.x - self.y * rhs.y;
-        let new_y = self.x * rhs.y + self.y * rhs.x;
-        self.x = new_x;
-        self.y = new_y;
+        (self.x, self.y) = (
+            self.x * rhs.x - self.y * rhs.y,
+            self.x * rhs.y + self.y * rhs.x,
+        );
     }
 }
 
-impl<T> Complex<T>
-{
+impl<T> Complex<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
