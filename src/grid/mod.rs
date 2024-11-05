@@ -1,9 +1,12 @@
-use crate::complex::{self, Complex};
-use rand::{seq::IteratorRandom, thread_rng};
-use std::{collections::HashSet, fmt, mem::swap};
+pub mod solver;
 
+use crate::complex::Complex;
+use rand::{seq::IteratorRandom, thread_rng};
+use std::{collections::HashSet, fmt};
+
+#[derive(Clone)]
 pub struct Grid {
-    grid: Vec<i32>,
+    pub v: Vec<i32>,
     size: i32,
     zero: Complex<i32>,
 }
@@ -19,11 +22,11 @@ impl Grid {
     }
 
     fn get_cell_ref(&self, p: Complex<i32>) -> &i32 {
-        &self.grid[(p.y * self.size + p.x) as usize]
+        &self.v[(p.y * self.size + p.x) as usize]
     }
 
     fn get_cell_mut(&mut self, p: Complex<i32>) -> &mut i32 {
-        &mut self.grid[(p.y * self.size + p.x) as usize]
+        &mut self.v[(p.y * self.size + p.x) as usize]
     }
 
     pub fn op(&mut self, d: Complex<i32>) {
@@ -34,9 +37,14 @@ impl Grid {
         self.zero += d;
     }
 
+    pub fn is_op_legal(&self, d: Complex<i32>) -> bool {
+        let p = self.zero + d;
+        (0..self.size).contains(&p.x) && (0..self.size).contains(&p.y)
+    }
+
     pub fn create_solved_grid(size: i32) -> Self {
         let mut grid = Grid {
-            grid: vec![0; (size * size) as usize],
+            v: vec![0; (size * size) as usize],
             size,
             zero: Complex::new(0, 0),
         };
@@ -66,10 +74,7 @@ impl Grid {
             let dirs = Self::dirs();
             let op = dirs
                 .iter()
-                .filter(|d| {
-                    let p = g.zero + **d;
-                    (0..size).contains(&p.x) && (0..size).contains(&p.y)
-                })
+                .filter(|d| g.is_op_legal(**d))
                 .choose(&mut rng)
                 .unwrap();
             g.op(*op);
