@@ -30,7 +30,8 @@ impl PartialOrd for State {
 
 impl Ord for State {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.cost.cmp(&other.cost)
+        (self.cost + self.path.len() as i32).cmp(&(other.cost + other.path.len() as i32))
+        // self.cost.cmp(&other.cost)
     }
 }
 
@@ -66,6 +67,21 @@ impl Solver {
         solver
     }
 
+    fn smart_hcost(&self, state: &State, d: Complex<i32>) -> i32 {
+        let mut c = state.cost;
+        c -= Complex::manhattan_dist(state.grid.zero, self.target_m[&0]);
+        c -= Complex::manhattan_dist(
+            state.grid.zero + d,
+            self.target_m[state.grid.get_cell_ref(state.grid.zero + d)],
+        );
+        c += Complex::manhattan_dist(state.grid.zero + d, self.target_m[&0]);
+        c += Complex::manhattan_dist(
+            state.grid.zero,
+            self.target_m[state.grid.get_cell_ref(state.grid.zero + d)],
+        );
+        c
+    }
+
     fn hcost(&self, grid: &Grid) -> i32 {
         let mut c = 0;
         for y in 0..grid.size {
@@ -88,7 +104,10 @@ impl Solver {
                 let mut ns = s.clone();
                 ns.path.push(*op);
                 ns.grid.op(*op);
-                ns.cost = ns.path.len() as i32 + self.hcost(&ns.grid);
+                if self.closed_set.contains_key(&ns.grid.v) {
+                    continue;
+                }
+                ns.cost = self.smart_hcost(&s, *op);
                 self.open_set.push(Reverse(ns));
             }
             self.closed_set.insert(s.grid.v.clone(), s);

@@ -61,6 +61,7 @@ impl<T> Complex<T> {
         Self { x, y }
     }
 }
+
 impl<T> Complex<T>
 where
     T: Add<Output = T> + Sub<Output = T> + PartialOrd,
