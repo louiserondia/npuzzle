@@ -5,7 +5,7 @@ mod grid;
 fn main() {
     let size = 4;
     for _ in 0..100 {
-        let g = Grid::create_random_grid(size, 10000);
+        let g = Grid::create_random_grid(size, 100);
         println!("{:?}", g);
 
         let mut solver = Solver::new(g);
