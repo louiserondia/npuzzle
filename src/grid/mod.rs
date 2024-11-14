@@ -87,7 +87,12 @@ impl fmt::Debug for Grid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for y in 0..self.size {
             for x in 0..self.size {
-                write!(f, "[{}]\t", self.get_cell_ref(Complex::new(x, y)))?;
+                let value = self.get_cell_ref(Complex::new(x, y));
+                if *value == 0 {
+                    write!(f, "\x1b[32m[{}]\x1b[0m\t", value)?;
+                } else {
+                    write!(f, "[{}]\t", value)?;
+                }
             }
             if y < self.size - 1 {
                 write!(f, "\n")?;

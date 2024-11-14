@@ -61,13 +61,3 @@ impl<T> Complex<T> {
         Self { x, y }
     }
 }
-
-impl<T> Complex<T>
-where
-    T: Add<Output = T> + Sub<Output = T> + PartialOrd,
-{
-    pub fn manhattan_dist(z1: Self, z2: Self) -> T {
-        let f = |a, b| if a > b { a - b } else { b - a };
-        f(z1.x, z2.x) + f(z1.y, z2.y)
-    }
-}

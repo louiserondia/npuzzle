@@ -1,18 +1,13 @@
 PROJECT_NAME = npuzzle
 
-.PHONY: all build run clean test
+.PHONY: all build clean test
 
-default: build
+all: build
 
 build:
-	cargo build
-
-run:
-	cargo run
+	cargo build --release
 
 clean:
 	cargo clean
 
 fclean: clean
-
-all: build run

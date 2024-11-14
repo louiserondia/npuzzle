@@ -1,6 +1,7 @@
 use std::{
     cmp::{Ordering, Reverse},
     collections::{BinaryHeap, HashMap},
+    fmt,
 };
 
 use crate::complex::Complex;
@@ -11,7 +12,7 @@ use super::Grid;
 pub struct State {
     grid: Grid,
     cost: i32,
-    pub path: Vec<Complex<i32>>,
+    path: Vec<Complex<i32>>,
 }
 
 impl PartialEq for State {
@@ -31,51 +32,78 @@ impl PartialOrd for State {
 impl Ord for State {
     fn cmp(&self, other: &Self) -> Ordering {
         (self.cost + self.path.len() as i32).cmp(&(other.cost + other.path.len() as i32))
-        // self.cost.cmp(&other.cost)
     }
 }
 
-pub struct Solver {
-    open_set: BinaryHeap<Reverse<State>>,
-    pub closed_set: HashMap<Vec<i32>, State>,
-    size: i32,
-    target_m: HashMap<i32, Complex<i32>>,
+// #[derive(Debug)]
+pub struct Res {
+    time_complexity: usize,
+    size_complexity: usize,
+    sequence: Vec<Complex<i32>>,
 }
 
-impl Solver {
-    pub fn new(grid: Grid) -> Self {
-        let mut solver = Self {
-            size: grid.size,
-            target_m: Grid::create_solved_grid(grid.size)
+pub fn print_res(res: Res, g: &Grid) {
+    let mut g = g.clone();
+    println!("-------------------------------");
+    println!("sequence :\n");
+    println!("{:?}\n", g);
+    for i in res.sequence.clone() {
+        g.op(i);
+        println!("{:?}\n", g);
+    }
+    println!("complexity in time : {:?}", res.time_complexity);
+    println!("complexity in size : {:?}", res.size_complexity);
+    println!("total number of operations : {:?}", res.sequence.len());
+    println!("-------------------------------");
+}
+
+#[derive(Clone, Copy)]
+pub enum Heuristic {
+    Manhattan,
+    Euclidian,
+    Misplaced,
+}
+
+impl Heuristic {
+    fn dist(&self, z0: Complex<i32>, z1: Complex<i32>) -> i32 {
+        match self {
+            Self::Manhattan => (z0.x - z1.x).abs() + (z0.y - z1.y).abs(),
+            Self::Euclidian => (((z0.x - z1.x).pow(2) + (z0.y - z1.y).pow(2)) as f64)
+                .sqrt()
+                .floor() as i32,
+            Self::Misplaced => (z0 != z1) as i32,
+        }
+    }
+}
+
+struct Hcost {
+    target_m: HashMap<i32, Complex<i32>>,
+    h: Heuristic,
+}
+
+impl Hcost {
+    fn new(size: i32, h: Heuristic) -> Self {
+        Self {
+            target_m: Grid::create_solved_grid(size)
                 .v
                 .iter()
                 .enumerate()
                 .map(|(i, &v)| (i as i32, v))
-                .map(|(i, v)| (v, Complex::new(i % grid.size, i / grid.size)))
+                .map(|(i, v)| (v, Complex::new(i % size, i / size)))
                 .collect(),
-            open_set: BinaryHeap::new(),
-            closed_set: HashMap::new(),
-        };
-        let state = State {
-            grid,
-            cost: 0,
-            path: Vec::new(),
-        };
-        solver.open_set.push(Reverse(state));
-        solver.open_set.peek_mut().unwrap().0.cost =
-            solver.hcost(&solver.open_set.peek().unwrap().0.grid);
-        solver
+            h,
+        }
     }
 
     fn smart_hcost(&self, state: &State, d: Complex<i32>) -> i32 {
         let mut c = state.cost;
-        c -= Complex::manhattan_dist(state.grid.zero, self.target_m[&0]);
-        c -= Complex::manhattan_dist(
+        c -= self.h.dist(state.grid.zero, self.target_m[&0]);
+        c -= self.h.dist(
             state.grid.zero + d,
             self.target_m[state.grid.get_cell_ref(state.grid.zero + d)],
         );
-        c += Complex::manhattan_dist(state.grid.zero + d, self.target_m[&0]);
-        c += Complex::manhattan_dist(
+        c += self.h.dist(state.grid.zero + d, self.target_m[&0]);
+        c += self.h.dist(
             state.grid.zero,
             self.target_m[state.grid.get_cell_ref(state.grid.zero + d)],
         );
@@ -87,30 +115,49 @@ impl Solver {
         for y in 0..grid.size {
             for x in 0..grid.size {
                 let p = Complex::new(x, y);
-                c += Complex::manhattan_dist(p, self.target_m[grid.get_cell_ref(p)]);
+                c += self.h.dist(p, self.target_m[grid.get_cell_ref(p)]);
             }
         }
         c
     }
+}
 
-    pub fn solve(&mut self) {
-        let target = Grid::create_solved_grid(self.size);
-        while !self.closed_set.contains_key(&target.v) {
-            let s = self.open_set.pop().unwrap().0;
-            // println!("{}", self.closed_set.len());
-            let dirs = Grid::dirs();
-            let ops = dirs.iter().filter(|d| s.grid.is_op_legal(**d));
-            for op in ops {
-                let mut ns = s.clone();
-                ns.path.push(*op);
-                ns.grid.op(*op);
-                if self.closed_set.contains_key(&ns.grid.v) {
-                    continue;
-                }
-                ns.cost = self.smart_hcost(&s, *op);
-                self.open_set.push(Reverse(ns));
+pub fn solve(grid: Grid, h: Heuristic) -> Res {
+    let mut res = Res {
+        time_complexity: 0,
+        size_complexity: 0,
+        sequence: Vec::new(),
+    };
+    let mut open_set: BinaryHeap<Reverse<State>> = BinaryHeap::new();
+    let mut closed_set: HashMap<Vec<i32>, State> = HashMap::new();
+    let hcost = Hcost::new(grid.size, h);
+    let state = State {
+        grid: grid.clone(),
+        cost: 0,
+        path: Vec::new(),
+    };
+    open_set.push(Reverse(state));
+    open_set.peek_mut().unwrap().0.cost = hcost.hcost(&open_set.peek().unwrap().0.grid);
+
+    let target = Grid::create_solved_grid(grid.size);
+    while !closed_set.contains_key(&target.v) {
+        let s = open_set.pop().unwrap().0;
+        res.time_complexity += 1;
+        res.size_complexity = res.size_complexity.max(open_set.len() + closed_set.len());
+        let dirs = Grid::dirs();
+        let ops = dirs.iter().filter(|d| s.grid.is_op_legal(**d));
+        for op in ops {
+            let mut ns = s.clone();
+            ns.path.push(*op);
+            ns.grid.op(*op);
+            if closed_set.contains_key(&ns.grid.v) {
+                continue;
             }
-            self.closed_set.insert(s.grid.v.clone(), s);
+            ns.cost = hcost.smart_hcost(&s, *op);
+            open_set.push(Reverse(ns));
         }
+        closed_set.insert(s.grid.v.clone(), s);
     }
+    res.sequence = closed_set[&target.v].path.clone();
+    res
 }
