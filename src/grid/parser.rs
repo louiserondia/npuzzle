@@ -1,4 +1,7 @@
-use std::{any, collections::VecDeque};
+use std::{
+    any,
+    collections::{HashSet, VecDeque},
+};
 
 use crate::complex::Complex;
 
@@ -44,8 +47,12 @@ pub fn parse(raw: &str) -> Result<Grid, ParsingError> {
         return Err(ParsingError);
     }
 
+    let hs = v.iter().collect::<HashSet<_>>();
+    if hs.len() != v.len() {
+        return Err(ParsingError);
+    }
     for n in 0..size.pow(2) {
-        if !v.contains(&n) {
+        if !hs.contains(&n) {
             return Err(ParsingError);
         }
     }
