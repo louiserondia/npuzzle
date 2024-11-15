@@ -1,6 +1,9 @@
 pub mod solver;
 pub mod parser;
 
+#[cfg(test)]
+mod tests;
+
 use crate::complex::Complex;
 use rand::{seq::IteratorRandom, thread_rng};
 use std::{collections::HashSet, fmt};

@@ -1,14 +1,12 @@
-use std::{
-    any,
-    collections::{HashSet, VecDeque},
-};
-
-use crate::complex::Complex;
-
 use super::Grid;
+use crate::complex::Complex;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
 pub struct ParsingError;
+
+#[cfg(test)]
+mod tests;
 
 pub fn parse(raw: &str) -> Result<Grid, ParsingError> {
     let mut it = raw

@@ -3,9 +3,11 @@ use std::{
     collections::{BinaryHeap, HashMap},
 };
 
+use super::Grid;
 use crate::complex::Complex;
 
-use super::Grid;
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug, Clone)]
 pub struct State {
@@ -33,6 +35,7 @@ impl Ord for State {
         (self.cost + self.path.len() as i32).cmp(&(other.cost + other.path.len() as i32))
     }
 }
+
 pub struct Res {
     time_complexity: usize,
     size_complexity: usize,

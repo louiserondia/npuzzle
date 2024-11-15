@@ -1,7 +1,7 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 #[cfg(test)]
-mod test;
+mod tests;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Complex<T> {
