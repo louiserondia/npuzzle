@@ -27,17 +27,15 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    println!("{}", args.heuristic);
     let h = match args.heuristic.as_str() {
         "manhattan" => Heuristic::Manhattan,
         "euclidian" => Heuristic::Euclidian,
         "misplaced" => Heuristic::Misplaced,
         _ => unreachable!(),
     };
-    let size = 4;
-    for _ in 0..1 {
-        let g = Grid::create_random_grid(size, 100);
-        let res = solve(g.clone(), h);
-        print_res(res, &g);
-    }
+
+    let raw = include_str!("input.txt");
+    let g = grid::parser::parse(raw).unwrap();
+    let res = solve(g.clone(), h);
+    print_res(res, &g);
 }

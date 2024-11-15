@@ -1,4 +1,5 @@
 pub mod solver;
+pub mod parser;
 
 use crate::complex::Complex;
 use rand::{seq::IteratorRandom, thread_rng};
