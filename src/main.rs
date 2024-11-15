@@ -17,7 +17,7 @@ struct Args {
 
     #[arg(long, requires = "generate_complexity")]
     generate: Option<usize>,
-    
+
     #[arg(long, requires = "generate")]
     generate_complexity: Option<usize>,
 
@@ -34,9 +34,9 @@ fn main() {
         "misplaced" => Heuristic::Misplaced,
         _ => unreachable!(),
     };
-    let size = 3;
+    let size = 4;
     for _ in 0..1 {
-        let g = Grid::create_random_grid(size, 10000);
+        let g = Grid::create_random_grid(size, 100);
         let res = solve(g.clone(), h);
         print_res(res, &g);
     }

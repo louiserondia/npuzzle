@@ -1,7 +1,6 @@
 use std::{
     cmp::{Ordering, Reverse},
     collections::{BinaryHeap, HashMap},
-    fmt,
 };
 
 use crate::complex::Complex;
@@ -34,8 +33,6 @@ impl Ord for State {
         (self.cost + self.path.len() as i32).cmp(&(other.cost + other.path.len() as i32))
     }
 }
-
-// #[derive(Debug)]
 pub struct Res {
     time_complexity: usize,
     size_complexity: usize,
@@ -122,7 +119,27 @@ impl Hcost {
     }
 }
 
+fn is_solvable(grid: &Grid) -> bool {
+    let mut inversions = 0;
+    for (i, n1) in grid.v.iter().enumerate() {
+        for n2 in grid.v.iter().skip(i + 1) {
+            if n1 > n2 && *n2 != 0 {
+                inversions += 1;
+            }
+        }
+    }
+
+    match grid.size % 2 {
+        0 => match grid.zero.y % 2 {
+            0 => inversions % 2 == 1,
+            _ => inversions % 2 == 0,
+        },
+        _ => inversions % 2 == 1,
+    }
+}
+
 pub fn solve(grid: Grid, h: Heuristic) -> Res {
+    println!("{:?}", is_solvable(&grid));
     let mut res = Res {
         time_complexity: 0,
         size_complexity: 0,
