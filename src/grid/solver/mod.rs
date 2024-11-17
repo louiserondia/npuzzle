@@ -1,6 +1,8 @@
 use std::{
     cmp::{Ordering, Reverse},
     collections::{BinaryHeap, HashMap},
+    error::Error,
+    fmt,
 };
 
 use super::Grid;
@@ -141,8 +143,21 @@ fn is_solvable(grid: &Grid) -> bool {
     }
 }
 
-pub fn solve(grid: Grid, h: Heuristic) -> Res {
-    println!("{:?}", is_solvable(&grid));
+#[derive(Debug)]
+pub struct UnsolvableError;
+
+impl fmt::Display for UnsolvableError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "unsolvable")
+    }
+}
+
+impl Error for UnsolvableError {}
+
+pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
+    if !is_solvable(&grid) {
+        return Err(UnsolvableError);
+    }
     let mut res = Res {
         time_complexity: 0,
         size_complexity: 0,
@@ -179,5 +194,5 @@ pub fn solve(grid: Grid, h: Heuristic) -> Res {
         closed_set.insert(s.grid.v.clone(), s);
     }
     res.sequence = closed_set[&target.v].path.clone();
-    res
+    Ok(res)
 }

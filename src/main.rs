@@ -44,7 +44,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         _ => unreachable!(),
     };
 
-    let res = solve(g.clone(), h);
-    print_res(res, &g);
+    match solve(&g, h) {
+        Ok(res) => print_res(res, &g),
+        Err(e) => return Err(e.into()),
+    };
     Ok(())
 }
