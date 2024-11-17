@@ -11,3 +11,6 @@ clean:
 	cargo clean
 
 fclean: clean
+
+run:
+	cargo run -- --heuristic manhattan --generate 3 --generate-complexity 10000
