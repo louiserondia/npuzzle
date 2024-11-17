@@ -28,8 +28,7 @@ where
     T: Add<Output = T> + Copy,
 {
     fn add_assign(&mut self, rhs: Self) {
-        self.x = self.x + rhs.x;
-        self.y = self.y + rhs.y;
+        *self = *self + rhs;
     }
 }
 
@@ -52,10 +51,7 @@ where
     T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Copy,
 {
     fn mul_assign(&mut self, rhs: Self) {
-        (self.x, self.y) = (
-            self.x * rhs.x - self.y * rhs.y,
-            self.x * rhs.y + self.y * rhs.x,
-        );
+        *self = *self * rhs;
     }
 }
 
