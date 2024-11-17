@@ -34,7 +34,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let g = match (args.filepath, args.generate, args.generate_complexity) {
         (Some(filepath), None, None) => match std::fs::read_to_string(filepath) {
-            Ok(raw) => grid::parser::parse(raw.as_str()).unwrap(),
+            Ok(raw) => match grid::parser::parse(raw.as_str()) {
+                Ok(g) => g,
+                Err(e) => return Err(e.into()),
+            },
             Err(e) => return Err(e.into()),
         },
         (None, Some(size), Some(n)) => grid::Grid::create_random_grid(size as i32, n as i32),

@@ -1,9 +1,17 @@
 use super::Grid;
 use crate::complex::Complex;
-use std::collections::HashSet;
+use std::{collections::HashSet, error::Error, fmt};
 
 #[derive(Debug, Clone)]
 pub struct ParsingError;
+
+impl fmt::Display for ParsingError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "parsing error")
+    }
+}
+
+impl Error for ParsingError {}
 
 #[cfg(test)]
 mod tests;
