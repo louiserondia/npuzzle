@@ -1,7 +1,10 @@
 use std::error::Error;
 
 use clap::{self, ArgGroup, Parser};
-use grid::{solver::{print_res, solve, Heuristic}, Grid};
+use grid::{
+    solver::{print_res, solve, Heuristic},
+    Grid,
+};
 
 mod complex;
 mod grid;

@@ -1,0 +1,8 @@
+#aaaaaa
+3 #aaa #aa
+#aaaaaaaa
+3 2 6
+1 4 0 #0
+#1 4 0
+8 7 5 #aaaaaaa
+#aaaaa
