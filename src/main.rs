@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use clap::{self, ArgGroup, Parser};
-use grid::solver::{print_res, solve, Heuristic};
+use grid::{solver::{print_res, solve, Heuristic}, Grid};
 
 mod complex;
 mod grid;
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
             Err(e) => return Err(e.into()),
         },
-        (None, Some(size), Some(n)) => grid::Grid::create_random_grid(size as i32, n as i32),
+        (None, Some(size), Some(n)) => Grid::create_random_grid(size as i32, n as i32),
         _ => unreachable!(),
     };
 
