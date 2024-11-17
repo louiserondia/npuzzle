@@ -27,6 +27,12 @@ mod invalid {
     }
 
     #[test]
+    fn negative_size() {
+        let res = parse(include_str!("test_inputs/invalid/negative_size.txt"));
+        assert!(res.is_err());
+    }
+
+    #[test]
     fn negative_value() {
         let res = parse(include_str!("test_inputs/invalid/negative_value.txt"));
         assert!(res.is_err());
@@ -41,6 +47,12 @@ mod invalid {
     #[test]
     fn wrong_value() {
         let res = parse(include_str!("test_inputs/invalid/wrong_value.txt"));
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn zero_size() {
+        let res = parse(include_str!("test_inputs/invalid/zero_size.txt"));
         assert!(res.is_err());
     }
 }

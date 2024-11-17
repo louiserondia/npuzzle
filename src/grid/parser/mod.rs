@@ -33,8 +33,8 @@ pub fn parse(raw: &str) -> Result<Grid, ParsingError> {
         return Err(ParsingError);
     }
     let size = match size_it.clone().next().unwrap().parse::<i32>() {
-        Ok(n) => n,
-        Err(_) => return Err(ParsingError),
+        Ok(n) if n >= 1 => n,
+        _ => return Err(ParsingError),
     };
 
     if it.clone().any(|l| l.count() != size as usize) {
