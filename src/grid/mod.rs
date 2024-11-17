@@ -10,7 +10,7 @@ use std::{collections::HashSet, fmt};
 
 #[derive(Clone)]
 pub struct Grid {
-    pub v: Vec<i32>,
+    v: Vec<i32>,
     size: i32,
     zero: Complex<i32>,
 }
@@ -33,7 +33,7 @@ impl Grid {
         &mut self.v[(p.y * self.size + p.x) as usize]
     }
 
-    pub fn op(&mut self, d: Complex<i32>) {
+    fn op(&mut self, d: Complex<i32>) {
         let v1 = *self.get_cell_ref(self.zero);
         let v2 = *self.get_cell_ref(self.zero + d);
         *self.get_cell_mut(self.zero) = v2;
@@ -41,7 +41,7 @@ impl Grid {
         self.zero += d;
     }
 
-    pub fn is_op_legal(&self, d: Complex<i32>) -> bool {
+    fn is_op_legal(&self, d: Complex<i32>) -> bool {
         let p = self.zero + d;
         (0..self.size).contains(&p.x) && (0..self.size).contains(&p.y)
     }

@@ -33,7 +33,7 @@ fn test_mul() {
 
 #[test]
 fn test_mul_assign() {
-    let mut z = Complex::new(1, 2);    
+    let mut z = Complex::new(1, 2);
     z *= Complex::new(3, 4);
     assert!(z == Complex::new(-5, 10));
 }
