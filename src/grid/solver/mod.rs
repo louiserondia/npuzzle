@@ -173,19 +173,26 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
         sequence: Vec::new(),
     };
     let mut open_set: BinaryHeap<Reverse<State>> = BinaryHeap::new();
+    let mut open_g: HashMap<Vec<i32>, i32> = HashMap::new();
     let mut closed_set: HashMap<Vec<i32>, State> = HashMap::new();
     let hcost = Hcost::new(grid.size, h);
-    let state = State {
-        grid: grid.clone(),
-        cost: 0,
-        path: Vec::new(),
-    };
-    open_set.push(Reverse(state));
+    {
+        let state = State {
+            grid: grid.clone(),
+            cost: 0,
+            path: Vec::new(),
+        };
+        open_g.insert(state.grid.v.clone(), 0);
+        open_set.push(Reverse(state));
+    }
     open_set.peek_mut().unwrap().0.cost = hcost.hcost(&open_set.peek().unwrap().0.grid);
 
     let target = Grid::create_solved_grid(grid.size);
     while !closed_set.contains_key(&target.v) {
         let s = open_set.pop().unwrap().0;
+        if open_g.contains_key(&s.grid.v) && open_g[&s.grid.v] < s.path.len() as i32 {
+            continue;
+        }
         res.time_complexity += 1;
         res.size_complexity = res.size_complexity.max(open_set.len() + closed_set.len());
         let dirs = Grid::dirs();
@@ -198,8 +205,14 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
                 continue;
             }
             ns.cost = hcost.smart_hcost(&s, *op);
+            if !open_g.contains_key(&ns.grid.v) {
+                open_g.insert(ns.grid.v.clone(), ns.path.len() as i32);
+            } else if (ns.path.len() as i32) < open_g[&ns.grid.v] {
+                *open_g.get_mut(&ns.grid.v).unwrap() = ns.path.len() as i32;
+            }
             open_set.push(Reverse(ns));
         }
+        open_g.remove(&s.grid.v);
         closed_set.insert(s.grid.v.clone(), s);
     }
     res.sequence = closed_set[&target.v].path.clone();
