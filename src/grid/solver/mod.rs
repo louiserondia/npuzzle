@@ -143,7 +143,6 @@ fn is_solvable(grid: &Grid) -> bool {
     }
 }
 
-#[derive(Debug)]
 pub struct UnsolvableError;
 
 impl fmt::Display for UnsolvableError {
@@ -153,6 +152,12 @@ impl fmt::Display for UnsolvableError {
 }
 
 impl Error for UnsolvableError {}
+
+impl fmt::Debug for UnsolvableError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", *self)
+    }
+}
 
 pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
     if !is_solvable(&grid) {
