@@ -190,9 +190,6 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
     let target = Grid::create_solved_grid(grid.size);
     while !closed_set.contains_key(&target.v) {
         let s = open_set.pop().unwrap().0;
-        if open_g.contains_key(&s.grid.v) && open_g[&s.grid.v] < s.path.len() as i32 {
-            continue;
-        }
         res.time_complexity += 1;
         res.size_complexity = res.size_complexity.max(open_set.len() + closed_set.len());
         let dirs = Grid::dirs();
@@ -209,6 +206,8 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
                 open_g.insert(ns.grid.v.clone(), ns.path.len() as i32);
             } else if (ns.path.len() as i32) < open_g[&ns.grid.v] {
                 *open_g.get_mut(&ns.grid.v).unwrap() = ns.path.len() as i32;
+            } else {
+                continue;
             }
             open_set.push(Reverse(ns));
         }
