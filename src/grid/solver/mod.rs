@@ -124,23 +124,28 @@ impl Hcost {
     }
 }
 
+fn unroll(grid: &Grid) -> Vec<i32> {
+    let mut v = vec![0; grid.size.pow(2) as usize];
+    let solved = Grid::create_solved_grid(grid.size);
+
+    for (i, n) in grid.v.iter().enumerate() {
+        v[((solved.v[i] - 1).rem_euclid(grid.size.pow(2))) as usize] = *n;
+    }
+    v
+}
+
 fn is_solvable(grid: &Grid) -> bool {
     let mut inversions = 0;
-    for (i, n1) in grid.v.iter().enumerate() {
-        for n2 in grid.v.iter().skip(i + 1) {
+    let g = unroll(grid);
+
+    for (i, n1) in g.iter().enumerate() {
+        for n2 in g.iter().skip(i + 1) {
             if n1 > n2 && *n2 != 0 {
                 inversions += 1;
             }
         }
     }
-
-    match grid.size % 2 {
-        0 => match grid.zero.y % 2 {
-            0 => inversions % 2 == 1,
-            _ => inversions % 2 == 0,
-        },
-        _ => inversions % 2 == 1,
-    }
+    inversions % 2 == 0
 }
 
 #[derive(Debug)]

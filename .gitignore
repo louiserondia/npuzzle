@@ -1,1 +1,8 @@
 /target
+npuzzle-gen.py
+pypy2.7-v7.3.17-linux64.tar.bz2
+pypy2.7-v7.3.17-win64
+pypy2.7-v7.3.17-linux64
+input.txt
+input2.txt
+.gitignore
