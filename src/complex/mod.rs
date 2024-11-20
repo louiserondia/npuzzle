@@ -1,7 +1,4 @@
-use std::{
-    ops::{Add, AddAssign, Mul, MulAssign, Sub},
-    process::Output,
-};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
 #[cfg(test)]
 mod tests;
