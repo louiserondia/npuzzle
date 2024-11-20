@@ -1,4 +1,7 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use std::{
+    ops::{Add, AddAssign, Mul, MulAssign, Sub},
+    process::Output,
+};
 
 #[cfg(test)]
 mod tests;
@@ -51,6 +54,29 @@ where
     T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Copy,
 {
     fn mul_assign(&mut self, rhs: Self) {
+        *self = *self * rhs;
+    }
+}
+
+impl<T> Mul<T> for Complex<T>
+where
+    T: Mul<Output = T> + Copy,
+{
+    type Output = Self;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        Self {
+            x: self.x * rhs,
+            y: self.y * rhs,
+        }
+    }
+}
+
+impl<T> MulAssign<T> for Complex<T>
+where
+    T: Mul<Output = T> + Copy,
+{
+    fn mul_assign(&mut self, rhs: T) {
         *self = *self * rhs;
     }
 }

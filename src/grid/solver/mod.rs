@@ -14,13 +14,14 @@ mod tests;
 #[derive(Debug, Clone)]
 pub struct State {
     grid: Grid,
-    cost: i32,
-    path: Vec<Complex<i32>>,
+    h_cost: i32,
+    g_cost: i32,
+    last_op: Option<Complex<i32>>,
 }
 
 impl PartialEq for State {
     fn eq(&self, other: &Self) -> bool {
-        self.cost == other.cost
+        self.h_cost == other.h_cost
     }
 }
 
@@ -35,11 +36,11 @@ impl PartialOrd for State {
 impl Ord for State {
     fn cmp(&self, other: &Self) -> Ordering {
         match (
-            self.cost + self.path.len() as i32,
-            other.cost + other.path.len() as i32,
+            self.h_cost + self.g_cost as i32,
+            other.h_cost + other.g_cost as i32,
         ) {
             (c1, c2) if c1 != c2 => c1.cmp(&c2),
-            _ => self.cost.cmp(&other.cost),
+            _ => self.h_cost.cmp(&other.h_cost),
         }
     }
 }
@@ -104,7 +105,7 @@ impl Hcost {
     }
 
     fn smart_hcost(&self, state: &State, d: Complex<i32>) -> i32 {
-        let mut c = state.cost;
+        let mut c = state.h_cost;
         c -= self.h.dist(
             state.grid.zero + d,
             self.target_m[state.grid.get_cell_ref(state.grid.zero + d)],
@@ -184,12 +185,13 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
     {
         let state = State {
             grid: grid.clone(),
-            cost: 0,
-            path: Vec::new(),
+            h_cost: 0,
+            g_cost: 0,
+            last_op: None,
         };
         open_set.push(Reverse(state));
     }
-    open_set.peek_mut().unwrap().0.cost = hcost.hcost(&open_set.peek().unwrap().0.grid);
+    open_set.peek_mut().unwrap().0.h_cost = hcost.hcost(&open_set.peek().unwrap().0.grid);
 
     let target = Grid::create_solved_grid(grid.size);
     while !closed_set.contains_key(&target.v) {
@@ -204,12 +206,18 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
             if closed_set.contains_key(&ns.grid.v) {
                 continue;
             }
-            ns.path.push(*op);
-            ns.cost = hcost.smart_hcost(&s, *op);
+            ns.g_cost += 1;
+            ns.last_op = Some(*op);
+            ns.h_cost = hcost.smart_hcost(&s, *op);
             open_set.push(Reverse(ns));
         }
         closed_set.insert(s.grid.v.clone(), s);
     }
-    res.sequence = closed_set[&target.v].path.clone();
+    let mut g = closed_set[&target.v].grid.clone();
+    while let Some(op) = closed_set[&g.v].last_op {
+        res.sequence.push(op);
+        g.op(op * -1);
+    }
+    res.sequence.reverse();
     Ok(res)
 }

@@ -37,3 +37,16 @@ fn test_mul_assign() {
     z *= Complex::new(3, 4);
     assert!(z == Complex::new(-5, 10));
 }
+
+#[test]
+fn test_right_scalar_mul() {
+    let z = Complex::new(1, 2) * -1;
+    assert!(z == Complex::new(-1, -2));
+}
+
+#[test]
+fn test_right_scalar_mul_assign() {
+    let mut z = Complex::new(1, 2);
+    z *= -1;
+    assert!(z == Complex::new(-1, -2));
+}
