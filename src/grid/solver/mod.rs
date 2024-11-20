@@ -34,7 +34,13 @@ impl PartialOrd for State {
 
 impl Ord for State {
     fn cmp(&self, other: &Self) -> Ordering {
-        (self.cost + self.path.len() as i32).cmp(&(other.cost + other.path.len() as i32))
+        match (
+            self.cost + self.path.len() as i32,
+            other.cost + other.path.len() as i32,
+        ) {
+            (c1, c2) if c1 != c2 => c1.cmp(&c2),
+            _ => self.cost.cmp(&other.cost),
+        }
     }
 }
 
@@ -99,12 +105,10 @@ impl Hcost {
 
     fn smart_hcost(&self, state: &State, d: Complex<i32>) -> i32 {
         let mut c = state.cost;
-        c -= self.h.dist(state.grid.zero, self.target_m[&0]);
         c -= self.h.dist(
             state.grid.zero + d,
             self.target_m[state.grid.get_cell_ref(state.grid.zero + d)],
         );
-        c += self.h.dist(state.grid.zero + d, self.target_m[&0]);
         c += self.h.dist(
             state.grid.zero,
             self.target_m[state.grid.get_cell_ref(state.grid.zero + d)],
@@ -117,7 +121,9 @@ impl Hcost {
         for y in 0..grid.size {
             for x in 0..grid.size {
                 let p = Complex::new(x, y);
-                c += self.h.dist(p, self.target_m[grid.get_cell_ref(p)]);
+                if *grid.get_cell_ref(p) != 0 {
+                    c += self.h.dist(p, self.target_m[grid.get_cell_ref(p)]);
+                }
             }
         }
         c
@@ -173,7 +179,6 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
         sequence: Vec::new(),
     };
     let mut open_set: BinaryHeap<Reverse<State>> = BinaryHeap::new();
-    let mut open_g: HashMap<Vec<i32>, i32> = HashMap::new();
     let mut closed_set: HashMap<Vec<i32>, State> = HashMap::new();
     let hcost = Hcost::new(grid.size, h);
     {
@@ -182,7 +187,6 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
             cost: 0,
             path: Vec::new(),
         };
-        open_g.insert(state.grid.v.clone(), 0);
         open_set.push(Reverse(state));
     }
     open_set.peek_mut().unwrap().0.cost = hcost.hcost(&open_set.peek().unwrap().0.grid);
@@ -196,22 +200,14 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
         let ops = dirs.iter().filter(|d| s.grid.is_op_legal(**d));
         for op in ops {
             let mut ns = s.clone();
-            ns.path.push(*op);
             ns.grid.op(*op);
             if closed_set.contains_key(&ns.grid.v) {
                 continue;
             }
+            ns.path.push(*op);
             ns.cost = hcost.smart_hcost(&s, *op);
-            if !open_g.contains_key(&ns.grid.v) {
-                open_g.insert(ns.grid.v.clone(), ns.path.len() as i32);
-            } else if (ns.path.len() as i32) < open_g[&ns.grid.v] {
-                *open_g.get_mut(&ns.grid.v).unwrap() = ns.path.len() as i32;
-            } else {
-                continue;
-            }
             open_set.push(Reverse(ns));
         }
-        open_g.remove(&s.grid.v);
         closed_set.insert(s.grid.v.clone(), s);
     }
     res.sequence = closed_set[&target.v].path.clone();
