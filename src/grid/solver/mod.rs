@@ -49,21 +49,24 @@ pub struct Res {
     time_complexity: usize,
     size_complexity: usize,
     sequence: Vec<Complex<i32>>,
+    grid: Grid,
 }
 
-pub fn print_res(res: Res, g: &Grid) {
-    let mut g = g.clone();
-    println!("-------------------------------");
-    println!("sequence :\n");
-    println!("{:?}\n", g);
-    for i in res.sequence.clone() {
-        g.op(i);
-        println!("{:?}\n", g);
+impl fmt::Display for Res {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut g = self.grid.clone();
+        write!(f, "-------------------------------\n")?;
+        write!(f, "sequence :\n\n")?;
+        write!(f, "{:?}\n\n", g)?;
+        for i in self.sequence.clone() {
+            g.op(i);
+            write!(f, "{:?}\n\n", g)?;
+        }
+        write!(f, "complexity in time : {:?}\n", self.time_complexity)?;
+        write!(f, "complexity in size : {:?}\n", self.size_complexity)?;
+        write!(f, "total number of operations : {:?}\n", self.sequence.len())?;
+        write!(f, "-------------------------------\n")
     }
-    println!("complexity in time : {:?}", res.time_complexity);
-    println!("complexity in size : {:?}", res.size_complexity);
-    println!("total number of operations : {:?}", res.sequence.len());
-    println!("-------------------------------");
 }
 
 #[derive(Clone, Copy)]
@@ -130,6 +133,7 @@ impl Hcost {
         c
     }
 }
+
 fn unroll(grid: &Grid) -> Vec<i32> {
     let mut v = vec![0; grid.size.pow(2) as usize];
     let solved = Grid::create_solved_grid(grid.size);
@@ -178,6 +182,7 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
         time_complexity: 0,
         size_complexity: 0,
         sequence: Vec::new(),
+        grid: grid.clone()
     };
     let mut open_set: BinaryHeap<Reverse<State>> = BinaryHeap::new();
     let mut closed_set: HashMap<Vec<i32>, State> = HashMap::new();

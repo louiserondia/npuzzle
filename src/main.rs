@@ -2,7 +2,7 @@ use std::error::Error;
 
 use clap::{self, ArgGroup, Parser};
 use grid::{
-    solver::{print_res, solve, Heuristic},
+    solver::{solve, Heuristic},
     Grid,
 };
 
@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     match solve(&g, h) {
-        Ok(res) => print_res(res, &g),
+        Ok(res) => println!("{}", res),
         Err(e) => return Err(e.into()),
     };
     Ok(())
