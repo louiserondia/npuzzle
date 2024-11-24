@@ -1,5 +1,5 @@
 use std::{
-    cmp::{min, Ordering, Reverse},
+    cmp::{Ordering, Reverse},
     collections::{BinaryHeap, HashMap, HashSet},
     error::Error,
     fmt,
