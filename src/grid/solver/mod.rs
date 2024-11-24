@@ -1,6 +1,6 @@
 use std::{
-    cmp::{Ordering, Reverse},
-    collections::{BinaryHeap, HashMap},
+    cmp::{min, Ordering, Reverse},
+    collections::{BinaryHeap, HashMap, HashSet},
     error::Error,
     fmt,
 };
@@ -64,7 +64,11 @@ impl fmt::Display for Res {
         }
         write!(f, "complexity in time : {:?}\n", self.time_complexity)?;
         write!(f, "complexity in size : {:?}\n", self.size_complexity)?;
-        write!(f, "total number of operations : {:?}\n", self.sequence.len())?;
+        write!(
+            f,
+            "total number of operations : {:?}\n",
+            self.sequence.len()
+        )?;
         write!(f, "-------------------------------\n")
     }
 }
@@ -88,6 +92,7 @@ impl Heuristic {
     }
 }
 
+#[derive(Clone)]
 struct Hcost {
     target_m: HashMap<i32, Complex<i32>>,
     h: Heuristic,
@@ -174,17 +179,30 @@ impl fmt::Debug for UnsolvableError {
     }
 }
 
-pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
-    if !is_solvable(&grid) {
+pub enum Algo {
+    Astar,
+    IDAstar,
+}
+
+pub fn solve(grid: &Grid, h: Heuristic, algo: Algo) -> Result<Res, UnsolvableError> {
+    if !is_solvable(grid) {
         return Err(UnsolvableError);
     }
+    Ok(match algo {
+        Algo::Astar => astar(grid, h),
+        Algo::IDAstar => idastar(grid, h),
+    })
+}
+
+fn astar(grid: &Grid, h: Heuristic) -> Res {
     let mut res = Res {
         time_complexity: 0,
         size_complexity: 0,
         sequence: Vec::new(),
-        grid: grid.clone()
+        grid: grid.clone(),
     };
     let mut open_set: BinaryHeap<Reverse<State>> = BinaryHeap::new();
+    let mut open_g: HashMap<Vec<i32>, i32> = HashMap::new();
     let mut closed_set: HashMap<Vec<i32>, State> = HashMap::new();
     let hcost = Hcost::new(grid.size, h);
     {
@@ -195,12 +213,14 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
             last_op: None,
         };
         open_set.push(Reverse(state));
+        open_g.insert(grid.v.clone(), 0);
     }
     open_set.peek_mut().unwrap().0.h_cost = hcost.hcost(&open_set.peek().unwrap().0.grid);
 
     let target = Grid::create_solved_grid(grid.size);
     while !closed_set.contains_key(&target.v) {
         let s = open_set.pop().unwrap().0;
+        open_g.remove(&s.grid.v);
         res.time_complexity += 1;
         res.size_complexity = res.size_complexity.max(open_set.len() + closed_set.len());
         let dirs = Grid::dirs();
@@ -214,6 +234,10 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
             ns.g_cost += 1;
             ns.last_op = Some(*op);
             ns.h_cost = hcost.smart_hcost(&s, *op);
+            if open_g.contains_key(&ns.grid.v) && open_g[&ns.grid.v] < ns.g_cost {
+                continue;
+            }
+            open_g.insert(ns.grid.v.clone(), ns.g_cost);
             open_set.push(Reverse(ns));
         }
         closed_set.insert(s.grid.v.clone(), s);
@@ -224,5 +248,67 @@ pub fn solve(grid: &Grid, h: Heuristic) -> Result<Res, UnsolvableError> {
         g.op(op * -1);
     }
     res.sequence.reverse();
-    Ok(res)
+    res
+}
+
+fn idastar(grid: &Grid, h: Heuristic) -> Res {
+    struct Env {
+        hcost: Hcost,
+        target: Grid,
+        lim: i32,
+        res: Res,
+    }
+
+    let hcost = Hcost::new(grid.size, h);
+    let mut env = Env {
+        target: Grid::create_solved_grid(grid.size),
+        lim: hcost.hcost(grid),
+        hcost,
+        res: Res {
+            size_complexity: 0,
+            time_complexity: 0,
+            sequence: Vec::new(),
+            grid: grid.clone(),
+        },
+    };
+
+    fn compute(env: &mut Env, grid: &Grid, g: i32) -> Option<i32> {
+        let mut seen: HashSet<Vec<i32>> = HashSet::new();
+        seen.insert(grid.v.clone());
+
+        let f = g + env.hcost.hcost(grid);
+        if f > env.lim {
+            return Some(f);
+        }
+
+        if grid.v == env.target.v {
+            return None;
+        }
+
+        let mut min_lim: Option<i32> = None;
+        let dirs = Grid::dirs();
+        let ops = dirs.iter().filter(|d| grid.is_op_legal(**d));
+        for op in ops {
+            env.res.time_complexity += 1;
+            let mut ngrid = grid.clone();
+            ngrid.op(*op);
+            if seen.contains(&ngrid.v) {
+                continue;
+            }
+            seen.insert(ngrid.v.clone());
+            env.res.sequence.push(*op);
+            env.res.size_complexity = env.res.size_complexity.max(env.res.sequence.len());
+            match compute(env, &ngrid, g + 1) {
+                Some(lim) => min_lim = Some(min_lim.unwrap_or(lim).min(lim)),
+                None => return None,
+            }
+            env.res.sequence.pop();
+        }
+        min_lim
+    }
+
+    while let Some(lim) = compute(&mut env, grid, 0) {
+        env.lim = lim;
+    }
+    env.res
 }
