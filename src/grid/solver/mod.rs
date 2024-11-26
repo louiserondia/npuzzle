@@ -179,6 +179,7 @@ impl fmt::Debug for UnsolvableError {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum Algo {
     Astar,
     IDAstar,
@@ -256,6 +257,7 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
         hcost: Hcost,
         target: Grid,
         lim: i32,
+        seen: HashSet<Vec<i32>>,
         res: Res,
     }
 
@@ -264,6 +266,7 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
         target: Grid::create_solved_grid(grid.size),
         lim: hcost.hcost(grid),
         hcost,
+        seen: HashSet::new(),
         res: Res {
             size_complexity: 0,
             time_complexity: 0,
@@ -271,11 +274,9 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
             grid: grid.clone(),
         },
     };
+    env.seen.insert(grid.v.clone());
 
     fn compute(env: &mut Env, grid: &Grid, g: i32) -> Option<i32> {
-        let mut seen: HashSet<Vec<i32>> = HashSet::new();
-        seen.insert(grid.v.clone());
-
         let f = g + env.hcost.hcost(grid);
         if f > env.lim {
             return Some(f);
@@ -284,7 +285,7 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
         if grid.v == env.target.v {
             return None;
         }
-
+        
         let mut min_lim: Option<i32> = None;
         let dirs = Grid::dirs();
         let ops = dirs.iter().filter(|d| grid.is_op_legal(**d));
@@ -292,17 +293,18 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
             env.res.time_complexity += 1;
             let mut ngrid = grid.clone();
             ngrid.op(*op);
-            if seen.contains(&ngrid.v) {
+            if env.seen.contains(&ngrid.v) {
                 continue;
             }
-            seen.insert(ngrid.v.clone());
             env.res.sequence.push(*op);
+            env.seen.insert(ngrid.v.clone());
             env.res.size_complexity = env.res.size_complexity.max(env.res.sequence.len());
             match compute(env, &ngrid, g + 1) {
                 Some(lim) => min_lim = Some(min_lim.unwrap_or(lim).min(lim)),
                 None => return None,
             }
             env.res.sequence.pop();
+            env.seen.remove(&ngrid.v);
         }
         min_lim
     }
