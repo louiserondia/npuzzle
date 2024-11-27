@@ -16,4 +16,4 @@ test:
 	cargo test
 
 run:
-	cargo run -- --heuristic manhattan --generate 3 --generate-complexity 10000
+	cargo run -- --heuristic manhattan -g 3 -i 10000
