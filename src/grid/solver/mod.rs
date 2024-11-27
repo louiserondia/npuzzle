@@ -274,7 +274,7 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
             grid: grid.clone(),
         },
     };
-    env.seen.insert(grid.v.clone());
+    env.seen.insert(grid.v.clone()); 
 
     fn compute(env: &mut Env, grid: &Grid, g: i32) -> Option<i32> {
         let f = g + env.hcost.hcost(grid);
@@ -306,7 +306,10 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
             env.res.sequence.pop();
             env.seen.remove(&ngrid.v);
         }
-        min_lim
+        match min_lim {
+            None => Some(env.lim + 1),
+            _ => min_lim
+        }
     }
 
     while let Some(lim) = compute(&mut env, grid, 0) {
