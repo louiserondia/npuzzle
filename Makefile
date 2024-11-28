@@ -1,6 +1,6 @@
 PROJECT_NAME = npuzzle
 
-.PHONY: all build clean test
+.PHONY: all build clean fclean test run
 
 all: build
 
