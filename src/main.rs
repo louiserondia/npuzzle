@@ -12,7 +12,7 @@ mod grid;
 #[derive(clap::Parser)]
 #[command(group(ArgGroup::new("input").required(true).args(&["generate", "filepath"])))]
 struct Args {
-    #[arg(long, value_parser = ["manhattan", "euclidian", "misplaced"])]
+    #[arg(long, value_parser = ["manhattan", "euclidian", "misplaced", "zero"])]
     heuristic: String,
 
     #[arg(long, short, requires = "iterations")]
@@ -47,6 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "manhattan" => Heuristic::Manhattan,
         "euclidian" => Heuristic::Euclidian,
         "misplaced" => Heuristic::Misplaced,
+        "zero" => Heuristic::Zero,
         _ => unreachable!(),
     };
 

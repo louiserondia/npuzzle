@@ -78,6 +78,7 @@ pub enum Heuristic {
     Manhattan,
     Euclidian,
     Misplaced,
+    Zero,
 }
 
 impl Heuristic {
@@ -88,6 +89,7 @@ impl Heuristic {
                 .sqrt()
                 .floor() as i32,
             Self::Misplaced => (z0 != z1) as i32,
+            Self::Zero => 0,
         }
     }
 }
@@ -274,18 +276,23 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
             grid: grid.clone(),
         },
     };
-    env.seen.insert(grid.v.clone()); 
+    env.seen.insert(grid.v.clone());
 
-    fn compute(env: &mut Env, grid: &Grid, g: i32) -> Option<i32> {
+    enum Output {
+        Found,
+        Limit(Option<i32>),
+    }
+
+    fn compute(env: &mut Env, grid: &Grid, g: i32) -> Output {
         let f = g + env.hcost.hcost(grid);
         if f > env.lim {
-            return Some(f);
+            return Output::Limit(Some(f));
         }
 
         if grid.v == env.target.v {
-            return None;
+            return Output::Found;
         }
-        
+
         let mut min_lim: Option<i32> = None;
         let dirs = Grid::dirs();
         let ops = dirs.iter().filter(|d| grid.is_op_legal(**d));
@@ -300,20 +307,18 @@ fn idastar(grid: &Grid, h: Heuristic) -> Res {
             env.seen.insert(ngrid.v.clone());
             env.res.size_complexity = env.res.size_complexity.max(env.res.sequence.len());
             match compute(env, &ngrid, g + 1) {
-                Some(lim) => min_lim = Some(min_lim.unwrap_or(lim).min(lim)),
-                None => return None,
+                Output::Limit(Some(lim)) => min_lim = Some(min_lim.unwrap_or(lim).min(lim)),
+                Output::Limit(None) => {}
+                Output::Found => return Output::Found,
             }
             env.res.sequence.pop();
             env.seen.remove(&ngrid.v);
         }
-        match min_lim {
-            None => Some(env.lim + 1),
-            _ => min_lim
-        }
+        Output::Limit(min_lim)
     }
 
-    while let Some(lim) = compute(&mut env, grid, 0) {
-        env.lim = lim;
+    while let Output::Limit(lim) = compute(&mut env, grid, 0) {
+        env.lim = lim.unwrap();
     }
     env.res
 }
